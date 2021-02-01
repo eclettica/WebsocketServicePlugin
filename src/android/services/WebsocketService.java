@@ -31,13 +31,16 @@ import org.json.JSONObject;
 import java.io.File;
 import java.net.URI;
 import java.util.Date;
+import java.util.Set;
+import java.util.HashSet;
+
 
 import tech.gusavila92.websocketclient.WebSocketClient;
 
 //import org.pgsqlite.SQLitePlugin;
 //import org.pgsqlite.SQLitePluginPackage;
 
-public class WebsocketService extends Service {
+public class WebsocketService extends Service  {
 
     public static WebsocketServicePlugin plugin;
     private String uri;
@@ -50,7 +53,9 @@ public class WebsocketService extends Service {
     private Handler m_handler;
     private Runnable m_handlerTask;
     public static boolean reconnect = true;
-    public  static Context mContext;
+    public static Context mContext;
+
+    protected static Set<WebsocketListnerInterface> listners = new HashSet<WebsocketListnerInterface>();
 
     public static String tag="WEBSOCKETSERVICE - WebsocketService";
 
@@ -78,6 +83,10 @@ public class WebsocketService extends Service {
      */
     public WebsocketService() {
 
+    }
+
+    public void addListner(WebsocketListnerInterface impl) {
+        listners.add(impl);
     }
 
     public void setPlugin(WebsocketServicePlugin plugin) {
@@ -188,6 +197,7 @@ public class WebsocketService extends Service {
             });
             tProcess.start();
             updateNotification(false);
+
         }
         else
             LogUtils.printLog(tag," start command fired");
@@ -241,10 +251,13 @@ public class WebsocketService extends Service {
                 requestHeartBit = false;
                 failedHeartBit = 0;
                 isEnableHearbitCheck = true;
+                sendToListner("onWebsocketConnect", "");
             }
 
             @Override
             public void onTextReceived(String message) {
+
+                sendToListner("onMessage", message);
 
                 // GESTIONE  DEL CASO IN CUI LA MAIN ACTIVITY  E' STATA UCCISA O IN BACKHGROUND
                 if (message.contains("newmessage") && !WebsocketServicePlugin.active)
@@ -380,6 +393,7 @@ public class WebsocketService extends Service {
             @Override
             public void onBinaryReceived(byte[] data) {
                 sendEvent("onWebsocketMessage", data.toString());
+                sendToListner("onWebsocketConnect", data.toString());
                 updateNotification(true);
             }
 
@@ -397,6 +411,7 @@ public class WebsocketService extends Service {
             @Override
             public void onException(Exception e) {
                 LogUtils.printLog(tag,"WEBSOCKET ON EXCEPTION");
+                sendToListner("onWebsocketException", "");
                 //e.printStackTrace();
                 //isConnected = false;
                 if(plugin!=null) {
@@ -413,7 +428,7 @@ public class WebsocketService extends Service {
                 isConnected = false;
                 isEnableHearbitCheck = false;
                 _sock=null;
-
+                sendToListner("onWebsocketClose", "");
                 if(plugin!=null) {
                     plugin.sendEvent("onWebsocketClose", "");
                     updateNotification(false);
@@ -431,6 +446,11 @@ public class WebsocketService extends Service {
     }
 
 
+    private void sendToListner(String event, String data) {
+        for(WebsocketListnerInterface listner: listners) {
+            listner.onEvent(event, data);
+        }
+    }
 
 
     private void updateNotification(boolean b) {
