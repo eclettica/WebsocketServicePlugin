@@ -1,9 +1,9 @@
 {
-  "name": "cordova-plugin-websocketservice",
+  "name": "cordova-plugin-linupwebsocketservice",
   "version": "0.0.1",
   "description": "An Android Cordova plugin",
   "cordova": {
-    "id": "cordova-plugin-websocketservice",
+    "id": "cordova-plugin-linupwebsocketservice",
     "platforms": [
       "android"
     ]
