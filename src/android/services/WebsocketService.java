@@ -223,17 +223,19 @@ public class WebsocketService extends Service  {
     }
 
     public void _connect(){
-        reconnect = true;
+        reconnect = false;
+
         if (this.uri == null) {
             LogUtils.printLog(tag," URI IS NULL");
+            reconnect = true;
             return;
         } else {
             LogUtils.printLog(tag," URI IS " + uri);
-
             //NotificationService.instance().uri = this.uri;
         }
         if(this.uri == null || this.uri.trim().isEmpty()){
             LogUtils.printLog(tag," URI IS NULL!!!");
+            reconnect = true;
             return;
         }
         this.startHeartbitService();
@@ -248,6 +250,7 @@ public class WebsocketService extends Service  {
                 sendEvent("onWebsocketConnect", "");
                 updateNotification(true);
                 isConnected = true;
+                reconnect = true;
                 requestHeartBit = false;
                 failedHeartBit = 0;
                 isEnableHearbitCheck = true;
@@ -428,6 +431,7 @@ public class WebsocketService extends Service  {
                 isConnected = false;
                 isEnableHearbitCheck = false;
                 _sock=null;
+                reconnect = true;
                 sendToListner("onWebsocketClose", "");
                 if(plugin!=null) {
                     plugin.sendEvent("onWebsocketClose", "");
@@ -441,6 +445,7 @@ public class WebsocketService extends Service  {
             _sock.connect();
         }
         catch(Exception e){
+            LogUtils.printLog(tag,"EXCEPTION " + e.getMessage());
             // DA EVIDENZIARE CON UNA FINESTRA DI DIALOGO CHE C'E' UN COFLITTO DI SOCKET
         }
     }
@@ -503,6 +508,8 @@ public class WebsocketService extends Service  {
                 _sock.send("{\"event\":\"heartbit\",\"data\":\"hello\"}");
             } else {
                 LogUtils.printLog(tag,"socket is null " + isConnected);
+                if(this.uri != null)
+                    this._connect();
             }
             requestHeartBit = true;
 
@@ -593,9 +600,5 @@ public class WebsocketService extends Service  {
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(i);
     }
-
-
-
-
 
 }
