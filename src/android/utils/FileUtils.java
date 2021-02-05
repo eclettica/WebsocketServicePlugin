@@ -104,6 +104,8 @@ public class FileUtils {
     }
 
     public static void writeToFile(String name, String data, Context context) {
+        if(data == null)
+            return;
         try {
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(name, Context.MODE_PRIVATE));
             outputStreamWriter.write(data);

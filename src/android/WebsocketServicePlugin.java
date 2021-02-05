@@ -52,7 +52,7 @@ public class WebsocketServicePlugin extends CordovaPlugin {
     protected static boolean requestHeartBit = false;
     protected static int failedHeartBit = 0;
     protected static JSONArray lstUser;
-    protected static boolean isEnableHearbitCheck;
+    protected static boolean isEnableJSListner = true;
     private static String uriToReconnect="";
 
     private static JSONObject defaultSettings = new JSONObject();
@@ -72,6 +72,7 @@ public class WebsocketServicePlugin extends CordovaPlugin {
          {
              ForegroundBinder binder = (ForegroundBinder) service;
              WebsocketServicePlugin.this.service = binder.getService();
+             WebsocketServicePlugin.this.service.setPlugin( WebsocketServicePlugin.this);
          }
  
          @Override
@@ -131,6 +132,9 @@ public class WebsocketServicePlugin extends CordovaPlugin {
     @Override
     public void onStop () {
         //clearKeyguardFlags(cordova.getActivity());
+        if(this.isBind) {
+            this.service.setPlugin(null);
+        }
     }
 
     /**
@@ -159,9 +163,9 @@ public class WebsocketServicePlugin extends CordovaPlugin {
                     this.configure(options);
                     break;
                 case "enable":
-                    Boolean isEnable = options.getBoolean("isEnable");
-                    if (isEnable != null)
-                        this.enable(isEnable);
+                    Boolean isEnableJSListner = options.getBoolean("isEnableJSListner");
+                    if (isEnableJSListner != null)
+                        this.enable(isEnableJSListner);
                     break;
                 case "connect":
                     String uri = options.getString("uri");
@@ -231,8 +235,7 @@ public class WebsocketServicePlugin extends CordovaPlugin {
 
     //@ReactMethod
     public void enable(boolean isEnable) {
-        isEnableHearbitCheck = isEnable;
-        failedHeartBit = 0;
+        isEnableJSListner = isEnable;
     }
 
     //@Override
@@ -288,7 +291,7 @@ public class WebsocketServicePlugin extends CordovaPlugin {
     //@ReactMethod
     public void connect(String uri) {
         startService(uri);
-        //FileUtils.writeToFile("websocketserviceuri", uri, this.getApplicationContext());
+        FileUtils.writeToFile("websocketserviceuri", uri, this.getApplicationContext());
         //Intent i  = new Intent(this.getApplicationContext(), WebsocketService.class);
         //i.putExtra("websocketserviceuri",uri);
         //this.getCurrentActivity().startService(i);
@@ -354,7 +357,7 @@ public class WebsocketServicePlugin extends CordovaPlugin {
         }
     }
 
-    public void sendEvent(String eventName, String params) {
+    /*public void sendEvent(String eventName, String params) {
         try {
             LogUtils.printLog(tag,"SendEventToJS " + eventName);
             JSONObject obj = new JSONObject();
@@ -367,7 +370,7 @@ public class WebsocketServicePlugin extends CordovaPlugin {
             LogUtils.printLog(tag,"problem in sendEvent");
             e.printStackTrace();
         }
-    }
+    }*/
 
     public Context getApplicationContext() {
         return this.cordova.getActivity().getApplicationContext();
@@ -388,12 +391,13 @@ public class WebsocketServicePlugin extends CordovaPlugin {
     }
     //@ReactMethod
     public void checkModule() {
-        sendEvent("onCheckModule", "{\"failed:\"" + this.failedHeartBit + ",\"connected\":"+this.isConnected+"}" );
+        //sendEvent("onCheckModule", "{\"failed:\"" + this.failedHeartBit + ",\"connected\":"+this.isConnected+"}" );
+        _sendEvent("onCheckModule", "{\"failed:\"" + WebsocketService.instance().getFailedHeartBit() + ",\"connected\":"+WebsocketService.instance().getIsConnected()+"}" );
     }
 
     //@ReactMethod
     public void close() {
-        FileUtils.writeToFile("idrauri","", this.getApplicationContext());
+        FileUtils.writeToFile("websocketserviceuri","", this.getApplicationContext());
         WebsocketService.instance().closeSocket();
     }
 
@@ -443,6 +447,20 @@ public class WebsocketServicePlugin extends CordovaPlugin {
 
         final String js = str;
 
+        cordova.getActivity().runOnUiThread(() -> webView.loadUrl("javascript:" + js));
+    }
+
+    public void sendEvent(String eventName, String params) {
+        if(isEnableJSListner)
+            this._sendEvent(eventName, params);
+    }
+
+    private void _sendEvent(String eventName, String params)
+    {
+
+        String str = String.format("%s.on('%s', %s)",
+                 JS_NAMESPACE, eventName, params);
+        final String js = str;
         cordova.getActivity().runOnUiThread(() -> webView.loadUrl("javascript:" + js));
     }
 

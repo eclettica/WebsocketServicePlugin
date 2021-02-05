@@ -43,7 +43,7 @@ import tech.gusavila92.websocketclient.WebSocketClient;
 public class WebsocketService extends Service  {
 
     public static WebsocketServicePlugin plugin;
-    private String uri;
+    public static String uri;
     private boolean isConnected = false;
     protected static boolean requestHeartBit = false;
     protected static int failedHeartBit = 0;
@@ -91,7 +91,7 @@ public class WebsocketService extends Service  {
 
     public void setPlugin(WebsocketServicePlugin plugin) {
         LogUtils.printLog(tag," SET PLUGIN");
-        plugin = plugin;
+        WebsocketService.plugin = plugin;
     }
 
     public WebsocketServicePlugin getPlugin() {
@@ -167,6 +167,7 @@ public class WebsocketService extends Service  {
         LogUtils.printLog(tag," onStartCommand ");
         if(uri == null && this.uri == null) {
             uri = FileUtils.readFromFile("websocketserviceuri", this);
+            this.uri = uri;
         }
         if (tProcess == null) {
             tProcess = new Thread(new Runnable() {
@@ -176,6 +177,7 @@ public class WebsocketService extends Service  {
                     while (true) {
                         try {
                             if (WebsocketService._sock == null && WebsocketService.reconnect) {
+
                                 _connect();
                                 LogUtils.printLog(tag," SOCKET ATTIVATA");
                                 Thread.sleep(10000);
@@ -260,7 +262,36 @@ public class WebsocketService extends Service  {
             @Override
             public void onTextReceived(String message) {
 
-                sendToListner("onMessage", message);
+                sendToListner("onWebsocketMessage", message);
+                sendEvent("onWebsocketMessage", message);
+
+                JSONObject jobj = null;
+
+                try {
+                    try {
+                        jobj = new JSONObject(message);
+                    } catch (Exception e) {
+                        if (message.equals("not logged")) {
+                            jobj = new JSONObject();
+                            jobj.put("message", message);
+                            jobj.put("event", message);
+
+                        }
+                    }
+                    if (jobj.getString("event").equals("heartbit")) {
+                        LogUtils.printLog(tag, "isheartbit...");
+                        requestHeartBit = false;
+                        failedHeartBit = 0;
+                        LogUtils.printLog(tag, "isheartbit... " + failedHeartBit + " " + requestHeartBit);
+                    }
+                } catch (JSONException ex) {
+                    LogUtils.printLog(tag, "Errore " + ex.toString());
+                }
+
+                updateNotification(true);
+            }
+
+            public void onTextReceivedDeprecated(String message) {
 
                 // GESTIONE  DEL CASO IN CUI LA MAIN ACTIVITY  E' STATA UCCISA O IN BACKHGROUND
                 if (message.contains("newmessage") && !WebsocketServicePlugin.active)
@@ -396,7 +427,7 @@ public class WebsocketService extends Service  {
             @Override
             public void onBinaryReceived(byte[] data) {
                 sendEvent("onWebsocketMessage", data.toString());
-                sendToListner("onWebsocketConnect", data.toString());
+                sendToListner("onWebsocketMessage", data.toString());
                 updateNotification(true);
             }
 
@@ -455,6 +486,9 @@ public class WebsocketService extends Service  {
         for(WebsocketListnerInterface listner: listners) {
             listner.onEvent(event, data);
         }
+        if(plugin != null) {
+            plugin.sendEvent(event, data);
+        }
     }
 
 
@@ -486,6 +520,14 @@ public class WebsocketService extends Service  {
     }
 
     public static int cntisEnableHearbitCheck =0;
+
+    public int getFailedHeartBit() {
+        return failedHeartBit;
+    }
+
+    public boolean getIsConnected() {
+        return this.isConnected;
+    }
 
     private void checkAndSendHeartBit() {
         //Log.d("WEBSOCKETSERVICE ahihi", "send heartbit");
