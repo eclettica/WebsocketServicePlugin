@@ -386,9 +386,8 @@ public class WebsocketServicePlugin extends CordovaPlugin {
         //if(_sock!=null) {
         //_sock.send(params);
         new SendOperation().execute(params);
-
-
     }
+
     //@ReactMethod
     public void checkModule() {
         //sendEvent("onCheckModule", "{\"failed:\"" + this.failedHeartBit + ",\"connected\":"+this.isConnected+"}" );

@@ -20,6 +20,7 @@ import android.os.Binder;
 //import com.idra.modules.DbSql.DbCustomLogic;
 import it.linup.cordova.plugin.WebsocketServicePlugin;
 import it.linup.cordova.plugin.services.NotificationService;
+import it.linup.cordova.plugin.services.SendOperation;
 import it.linup.cordova.plugin.utils.LogUtils;
 
 import it.linup.cordova.plugin.utils.FileUtils;
@@ -103,6 +104,11 @@ public class WebsocketService extends Service  {
             _sock.send(params[0]);
         }
     }
+
+    public void asyncSend(String... params) {
+        new SendOperation().execute(params);
+    }
+
 
     private static enum WebsocketServiceSingleton {
         INSTANCE;

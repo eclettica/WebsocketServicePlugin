@@ -54,5 +54,6 @@
         <source-file src="src/android/services/WebsocketService.java" target-dir="src/it/linup/cordova/plugin/services" />
         <source-file src="src/android/services/WebsocketListnerInterface.java" target-dir="src/it/linup/cordova/plugin/services" />
         <source-file src="src/android/services/NotificationService.java" target-dir="src/it/linup/cordova/plugin/services" />
+        <source-file src="src/android/services/SendOperation.java" target-dir="src/it/linup/cordova/plugin/services" />
     </platform>
 </plugin>
