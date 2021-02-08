@@ -53,6 +53,12 @@ WebsocketServicePlugin.prototype.connect = function(uri, successCallback, errorC
   cordova.exec(successCallback, errorCallback, 'WebsocketServicePlugin', 'connect', [options]);
 }
 
+WebsocketServicePlugin.prototype.disconnect = function(uri, successCallback, errorCallback) {
+  var options = {};
+  options.uri = uri;
+  cordova.exec(successCallback, errorCallback, 'WebsocketServicePlugin', 'disconnect', [options]);
+}
+
 WebsocketServicePlugin.prototype.send = function(msg, successCallback, errorCallback) {
   var options = {};
   options.params = msg;

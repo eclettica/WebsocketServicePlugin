@@ -185,6 +185,10 @@ public class WebsocketServicePlugin extends CordovaPlugin {
                     if (uri != null)
                         this.connect(uri);
                     break;
+                case "disconnect":
+                    LogUtils.printLog(tag,"disconnect: ");
+                    this.disconnect();
+                    break;
                 case "setInfo": {
                     String params = options.getString("params");
                     if (params != null)
@@ -309,6 +313,14 @@ public class WebsocketServicePlugin extends CordovaPlugin {
 
         // BISOGNA GESTIRE IL CASO IN CUI LA CONNESSIONE E' ATTIVA E VOGLIO CAMBIARE SERVER
         WebsocketService.plugin = this;
+        //WebsocketService.instance().connect(uri);
+    }
+
+    public void disconnect() {
+        startService(uri);
+        FileUtils.writeToFile("websocketserviceuri", "", this.getApplicationContext());
+        WebsocketService.plugin = this;
+        stopService();
         //WebsocketService.instance().connect(uri);
     }
 
