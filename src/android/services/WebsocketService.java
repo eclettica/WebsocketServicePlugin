@@ -100,12 +100,14 @@ public class WebsocketService extends Service  {
     }
 
     public void send(String[] params) {
+        LogUtils.printLog(tag," send " + params);
         if(params != null && params.length == 1 && _sock != null) {
             _sock.send(params[0]);
         }
     }
 
     public void asyncSend(String... params) {
+        LogUtils.printLog(tag," asyncSend " + params);
         new SendOperation().execute(params);
     }
 
@@ -284,7 +286,7 @@ public class WebsocketService extends Service  {
 
                         }
                     }
-                    if (jobj.getString("event").equals("heartbit")) {
+                    if (jobj != null && "heartbit".equals(jobj.getString("event"))) {
                         LogUtils.printLog(tag, "isheartbit...");
                         requestHeartBit = false;
                         failedHeartBit = 0;
@@ -451,6 +453,8 @@ public class WebsocketService extends Service  {
             @Override
             public void onException(Exception e) {
                 LogUtils.printLog(tag,"WEBSOCKET ON EXCEPTION");
+                LogUtils.printLog(tag,"WEBSOCKET ON EXCEPTION " + e.getMessage());
+                e.printStackTrace();
                 sendToListner("onWebsocketException", "");
                 //e.printStackTrace();
                 //isConnected = false;
@@ -553,7 +557,7 @@ public class WebsocketService extends Service  {
 
             LogUtils.printLog(tag," sock: " + _sock + " isconnected " + isConnected);
             if (_sock != null && isConnected) {
-                _sock.send("{\"event\":\"heartbit\",\"data\":\"hello\"}");
+                _sock.send("{\"event\":\"heartbit\",\"data\":{\"timestamp\":0}}");
             } else {
                 LogUtils.printLog(tag,"socket is null " + isConnected);
                 if(this.uri != null)

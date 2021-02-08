@@ -42,7 +42,7 @@ public class WebsocketServicePlugin extends CordovaPlugin {
     private enum Event { ACTIVATE, DEACTIVATE, FAILURE }
 
     // Plugin namespace
-    private static final String JS_NAMESPACE = "cordova.plugin.WebsocketServicePlugin";
+    private static final String JS_NAMESPACE = "window.plugin.WebsocketServicePlugin";
 
     private static Handler m_handler;
     private Runnable m_handlerTask;
@@ -132,7 +132,18 @@ public class WebsocketServicePlugin extends CordovaPlugin {
     @Override
     public void onStop () {
         //clearKeyguardFlags(cordova.getActivity());
-        if(this.isBind) {
+        /*if(this.isBind) {
+            this.service.setPlugin(null);
+        }*/
+    }
+
+    /**
+     * Called when the activity is finishing.
+     */
+    @Override
+    public void onDestroy () {
+        //clearKeyguardFlags(cordova.getActivity());
+        if(isBind && this.service != null) {
             this.service.setPlugin(null);
         }
     }
