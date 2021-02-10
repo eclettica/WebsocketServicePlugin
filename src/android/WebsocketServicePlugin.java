@@ -183,7 +183,7 @@ public class WebsocketServicePlugin extends CordovaPlugin {
                     LogUtils.printLog(tag,"connect uri: " + uri);
                     this.callbackContext = callbackContext;
                     if (uri != null)
-                        this.connect(uri);
+                        this.connect(uri, callbackContext);
                     break;
                 case "disconnect":
                     LogUtils.printLog(tag,"disconnect: ");
@@ -305,6 +305,10 @@ public class WebsocketServicePlugin extends CordovaPlugin {
 
     //@ReactMethod
     public void connect(String uri) {
+        connect(uri, null);
+    }
+
+    public void connect(String uri, CallbackContext callbackContext) {
         startService(uri);
         FileUtils.writeToFile("websocketserviceuri", uri, this.getApplicationContext());
         //Intent i  = new Intent(this.getApplicationContext(), WebsocketService.class);
@@ -314,6 +318,10 @@ public class WebsocketServicePlugin extends CordovaPlugin {
         // BISOGNA GESTIRE IL CASO IN CUI LA CONNESSIONE E' ATTIVA E VOGLIO CAMBIARE SERVER
         WebsocketService.plugin = this;
         //WebsocketService.instance().connect(uri);
+        if(callbackContext != null) {
+            PluginResult pluginResult = new PluginResult(PluginResult.Status.OK);
+            callbackContext.sendPluginResult(pluginResult);
+        }
     }
 
     public void disconnect() {
