@@ -42,7 +42,7 @@ public class WebsocketServicePlugin extends CordovaPlugin {
     private enum Event { ACTIVATE, DEACTIVATE, FAILURE }
 
     // Plugin namespace
-    private static final String JS_NAMESPACE = "window.plugin.WebsocketServicePlugin";
+    private static final String JS_NAMESPACE = "window.plugins.WebsocketServicePlugin";
 
     private static Handler m_handler;
     private Runnable m_handlerTask;

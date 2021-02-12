@@ -621,7 +621,6 @@ public class WebsocketService extends Service  {
         _sock = null;
         isEnableHearbitCheck = false;
         tProcess.interrupt();
-
     }
 
     private boolean isMyServiceRunning(Class<?> serviceClass) {
