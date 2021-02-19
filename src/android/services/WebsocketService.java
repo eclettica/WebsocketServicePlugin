@@ -107,7 +107,7 @@ public class WebsocketService extends Service  {
     }
 
     public void asyncSend(String... params) {
-        LogUtils.printLog(tag," asyncSend " + params);
+        LogUtils.printLog(tag," asyncSend " + params[0]);
         new SendOperation().execute(params);
     }
 

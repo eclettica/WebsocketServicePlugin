@@ -75,6 +75,14 @@ WebsocketServicePlugin.prototype.checkBackground = function(successCallback, err
     successCallback(bool);
 }
 
+WebsocketServicePlugin.prototype.on = function(event, data) {
+  console.log('WebsocketServicePlugin on ', event, data);
+}
+
+WebsocketServicePlugin.prototype.fireEvent = function(event, data) {
+  console.log('WebsocketServicePlugin on ', event, data);
+}
+
 // Installation constructor that binds ToastyPlugin to window
 WebsocketServicePlugin.install = function() {
   if (!window.plugins) {
