@@ -100,7 +100,7 @@ public class WebsocketService extends Service  {
     }
 
     public void send(String[] params) {
-        LogUtils.printLog(tag," send " + params);
+        LogUtils.printLog(tag," send " + params[0]);
         if(params != null && params.length == 1 && _sock != null) {
             _sock.send(params[0]);
         }
@@ -111,6 +111,11 @@ public class WebsocketService extends Service  {
         new SendOperation().execute(params);
     }
 
+    public boolean getConnected() {
+        if(_sock == null)
+            this.isConnected = false;
+        return this.isConnected;
+    }
 
     private static enum WebsocketServiceSingleton {
         INSTANCE;
@@ -283,14 +288,21 @@ public class WebsocketService extends Service  {
                             jobj = new JSONObject();
                             jobj.put("message", message);
                             jobj.put("event", message);
-
+                            FileUtils.writeToFile("websocketserviceuri", "", mContext);
+                            closeSocket();
                         }
                     }
-                    if (jobj != null && "heartbit".equals(jobj.getString("event"))) {
-                        LogUtils.printLog(tag, "isheartbit...");
-                        requestHeartBit = false;
-                        failedHeartBit = 0;
-                        LogUtils.printLog(tag, "isheartbit... " + failedHeartBit + " " + requestHeartBit);
+                    if (jobj != null) {
+                        String evt = jobj.getString("event");
+                        if ("heartbit".equals(evt)) {
+                            LogUtils.printLog(tag, "isheartbit...");
+                            requestHeartBit = false;
+                            failedHeartBit = 0;
+                            LogUtils.printLog(tag, "isheartbit... " + failedHeartBit + " " + requestHeartBit);
+                        } else if("forcelogout".equals(evt)) {
+                            FileUtils.writeToFile("websocketserviceuri", "", mContext);
+                            closeSocket();
+                        }
                     }
                 } catch (JSONException ex) {
                     LogUtils.printLog(tag, "Errore " + ex.toString());
