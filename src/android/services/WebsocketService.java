@@ -11,7 +11,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
-import android.os.Vibrator;
 import android.util.Log;
 
 import android.os.Binder;
@@ -192,7 +191,7 @@ public class WebsocketService extends Service  {
                             if (WebsocketService._sock == null && WebsocketService.reconnect) {
 
                                 _connect();
-                                LogUtils.printLog(tag," SOCKET ATTIVATA");
+                                LogUtils.printLog(tag," SOCKET IN ATTIVAZIONE");
                                 Thread.sleep(10000);
                             } else {
                                 if(WebsocketService._sock == null)
@@ -300,8 +299,11 @@ public class WebsocketService extends Service  {
                             failedHeartBit = 0;
                             LogUtils.printLog(tag, "isheartbit... " + failedHeartBit + " " + requestHeartBit);
                         } else if("forcelogout".equals(evt)) {
+                            LogUtils.printLog(tag, "FORCELOGOUT!!!");
                             FileUtils.writeToFile("websocketserviceuri", "", mContext);
+                            uri = null;
                             closeSocket();
+                            stopHeartbitService();
                         }
                     }
                 } catch (JSONException ex) {
@@ -309,137 +311,6 @@ public class WebsocketService extends Service  {
                 }
 
                 updateNotification(true);
-            }
-
-            public void onTextReceivedDeprecated(String message) {
-
-                // GESTIONE  DEL CASO IN CUI LA MAIN ACTIVITY  E' STATA UCCISA O IN BACKHGROUND
-                if (message.contains("newmessage") && !WebsocketServicePlugin.active)
-                {
-                    try {
-                        Vibrator v = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
-                        v.vibrate(1000);
-                        LogUtils.printLog(tag," MESSAGE RECEIVED");
-                    } catch (Exception e) {
-                        LogUtils.printLog(tag,"ACTIVITY ERROR ON  MESSAGE RECEIVED VIBRATION");
-                    }
-
-                }
-                // FINE GESTIONE  DEL CASO IN CUI LA MAIN ACTIVITY  E' STATA UCCISA O IN BACKHGROUND
-
-                JSONObject jobj = null;
-                try {
-
-                    try
-                    {
-                        jobj = new JSONObject(message);
-                    }
-                    catch(Exception e){
-                        if (message.equals("not logged")){
-                            jobj=new JSONObject();
-                            jobj.put("message",message);
-                            jobj.put("event",message);
-
-                        }
-                    }
-
-                    if (jobj.getString("event").equals("connect"))
-                    {
-                        updateNotification(true);
-                    }
-                    else if (jobj.getString("event").equals("call"))
-                    {
-                        final String status = jobj.getJSONObject("data").getString("status");
-                        if (status.equals("IncomingCall") || status.equals("GroupCall")) {
-
-                            int delay=500;
-                            if (!WebsocketServicePlugin.active)
-                            {
-                                LogUtils.printLog(tag,"APP RIAVVIATA");
-                                delay=4000;
-                                restartApp();
-                            }
-
-                            /*
-                             *commented due to improper feedback during group call
-                             */
-                            /*if(status.equals("GroupCall")) {
-                                SQLiteDatabase readableDatabase = null;
-                                readableDatabase = ReactDatabaseSupplier.getInstance(WebsocketServicePlugin.this.getReactApplicationContext()).getReadableDatabase();
-                                if (readableDatabase != null) {
-                                    String impl = AsyncLocalStorageUtil.getItemImpl(readableDatabase, "@IDRASettings:MultipleCall");
-                                    if (impl != "true") {
-                                            if(WebsocketServicePlugin.getInstance()!=null)
-                                                WebsocketServicePlugin.getInstance().this.sendEvent("onCancelCall","");
-                                    }
-                                    Log.d("AsyncStorage", "impl: " + impl);
-                                }
-                            }*/
-
-                            try{
-                                final String from = plugin.getCallName(jobj.getJSONObject("data").getString("from"));
-                                final String type = jobj.getJSONObject("data").getString("calltype").equals("1") ? "Audio" : "Video";
-                                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        //MainActivity.getInstance().startIncomingCall(from, type);
-                                    }
-                                }, delay);
-                            }
-                            catch (Exception e)
-                            {
-                                // PEZZOTTO PER RISOLVERE IL PROBLEM DI UNA CHIMATA QUALNDO L^APP STA IN BACKGROUND
-                                final String from="Unknown";
-                                final String type = jobj.getJSONObject("data").getString("calltype").equals("1") ? "Audio" : "Video";
-                                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        //MainActivity.getInstance().startIncomingCall(from, type);
-                                    }
-                                }, delay);
-
-                            }
-
-                        } else if (status.equals("CancelCal")) {
-                            //IncomingCallActivity.requestDestroy();
-                        }
-                    }
-                    else if (jobj.getString("event").equals("heartbit"))
-                    {
-                        LogUtils.printLog(tag,"isheartbit...");
-                        requestHeartBit = false;
-                        failedHeartBit = 0;
-                        LogUtils.printLog(tag,"isheartbit... " + failedHeartBit +" " +requestHeartBit );
-                    }
-                    else if (jobj.getString("event").equals("login"))
-                    {
-                        lstUser = jobj.getJSONArray("data");
-                    }
-                    else if (jobj.get("event").equals("newmessage"))
-                    {
-                        //DbCustomLogic dbc = new DbCustomLogic(mContext);
-                        //dbc.saveMessageAndChat(jobj,_sock);
-                    }
-
-
-                }
-                catch (Exception e)
-                {
-                    //e.printStackTrace();
-                    LogUtils.printLog(tag,"Errore " + e.toString());
-
-                }
-
-                LogUtils.printLog(tag," WS received: " + message);
-
-
-                // QUI DOBBIAMO GESTIRE LA MEMORIZZAZIONE DEI MESSAGGI IN DB E LA NOTIFICA DI AVVENUTA CONSEGNA .... NON PUO' ESSERE FATTA SULL'ACTIVITY
-
-                sendEvent("onWebsocketMessage", message);
-
-                updateNotification(true);
-
-
             }
 
 
@@ -541,6 +412,15 @@ public class WebsocketService extends Service  {
         }
     }
 
+    private void stopHeartbitService() {
+        isEnableHearbitCheck = false;
+        if (m_handler != null && m_handlerTask != null) {
+            m_handler.removeCallbacks(m_handlerTask);
+            m_handler = null;
+            m_handlerTask = null;
+        }
+    }
+
     public static int cntisEnableHearbitCheck =0;
 
     public int getFailedHeartBit() {
@@ -581,9 +461,11 @@ public class WebsocketService extends Service  {
         }
         else{
             cntisEnableHearbitCheck=cntisEnableHearbitCheck+1;
-            // NEL CASO IN CUI PER QUALCHE STRANO MOTIVO isEnableHearbitCheck fa in flase ma la connessione resta in unso stao spurio non ciene più richiamato il failedHeartBit e se ne ca in loop
-            if (cntisEnableHearbitCheck>=3)
-                isEnableHearbitCheck=true;
+            // NEL CASO IN CUI PER QUALCHE STRANO MOTIVO isEnableHearbitCheck fa in flase ma la connessione resta in unso stao spurio non viene più richiamato il failedHeartBit e se ne va in loop
+            if (cntisEnableHearbitCheck>=3) {
+                isEnableHearbitCheck = true;
+                cntisEnableHearbitCheck = 0;
+            }
         }
         if (m_handler != null) {
             m_handler.postDelayed(m_handlerTask, failedHeartBit > 0 ? 5000 : 20000);
@@ -626,7 +508,7 @@ public class WebsocketService extends Service  {
         this.reconnect = false;
         LogUtils.printLog(tag," closeSocket ");
 
-        if(_sock!=null) {
+        if(_sock != null) {
             _sock.send("{\"event\":\"logout\",\"data\":\"logout\"}");
             _sock.close();
         }

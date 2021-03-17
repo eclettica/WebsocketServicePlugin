@@ -195,8 +195,8 @@ public class NotificationService  {
             notificationChannel.setDescription("Channel description");
             notificationChannel.enableLights(true);
             notificationChannel.setLightColor(Color.RED);
-            notificationChannel.setVibrationPattern(new long[]{0, 1000, 500, 1000});
-            notificationChannel.enableVibration(true);
+            // notificationChannel.setVibrationPattern(new long[]{0, 1000, 500, 1000});
+            // notificationChannel.enableVibration(true);
             notificationManager.createNotificationChannel(notificationChannel);
             //builder = new NotificationCompat.Builder(c, NOTIFICATION_CHANNEL_ID);
         } else {
