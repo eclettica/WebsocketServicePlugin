@@ -47,6 +47,7 @@ public class NotificationService  {
     private String userCompleteName = "";
     private String userEmail = "";
     private Integer numNotification = 0;
+    private Boolean status;
 
     private static JSONObject defaultSettings = new JSONObject();
 
@@ -180,9 +181,26 @@ public class NotificationService  {
         }*/
     }
 
+    public void updateNotification(Boolean status, Integer notificationNumber, Context c, Class<?> caClass) {
+
+        Notification notification = makeNotification(status, notificationNumber, c, caClass);
+        NotificationManager manager = getNotificationManager(c);
+        manager.notify(9999, notification);
+
+    }
     private Notification makeNotification(Boolean status, Context c, Class<?> caClass) {
-        if(status == null)
+        return makeNotification(status, null, c, caClass);
+    }
+
+    private Notification makeNotification(Boolean status, Integer notificationNumber, Context c, Class<?> caClass) {
+        if(status == null) {
+            status = this.status;
+        } else {
+            this.status = status;
+        }
+        if(status == null) {
             status = false;
+        }
         NotificationCompat.Builder builder = null;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -221,14 +239,22 @@ public class NotificationService  {
         }
         builder.setTicker("WebSocketService");
 
-        builder.setContentTitle(defaultSettings.optString("title", "WebSocketService - " ));
-        builder.setContentText(statusText + " - " + defaultSettings.optString("text", "" ));
-        //builder.setContentTitle("WebSocketService - "  + this.userCompleteName);
-        //builder.setContentText(statusText + " - " + this.userEmail);
         String terza = ""; //status + " ";
         if(this.numNotification>0) {
-            terza += "- " + "notifications: " + this.numNotification;
+            terza += "notifications: " + this.numNotification;
         }
+
+        if(notificationNumber != null && notificationNumber > 0) {
+            statusText += " - " + "notifiche: " + notificationNumber;
+            terza += "notifiche: " + notificationNumber;
+        }
+
+        builder.setContentTitle(defaultSettings.optString("title", "WebSocketService" ));
+        //builder.setContentText(statusText + " - " + defaultSettings.optString("text", "" ));
+        builder.setContentText(statusText);
+        //builder.setContentTitle("WebSocketService - "  + this.userCompleteName);
+        //builder.setContentText(statusText + " - " + this.userEmail);
+
         builder.setSubText(terza);
         if(caClass != null ) {
             Intent t = new Intent(c, caClass);
