@@ -194,8 +194,10 @@ public class WebsocketService extends Service  {
                                 LogUtils.printLog(tag," SOCKET IN ATTIVAZIONE");
                                 Thread.sleep(10000);
                             } else {
-                                if(WebsocketService._sock == null)
-                                    LogUtils.printLog(tag," SOCKET NON ATTIVATA");
+                                if(WebsocketService._sock == null) {
+                                    LogUtils.printLog(tag, " SOCKET NON ATTIVATA");
+                                    updateNotification(false);
+                                }
                                 else
                                     LogUtils.printLog(tag," SOCKET ATTIVATA");
                                 Thread.sleep(5000);
@@ -528,14 +530,20 @@ public class WebsocketService extends Service  {
     }
 
     public void  stopMonitorSevice(){
-        Intent servicetIntent = new Intent(mContext, WebsocketService.class);
-        stopService(servicetIntent);
+        /*Intent servicetIntent = new Intent(mContext, WebsocketService.class);
+        stopService(servicetIntent);*/
+        stopSelf();
     }
 
     public void  startMonitorSevice(){
-        LogUtils.printLog(tag," startMonitorSevice ");
-        Intent serviceIntent = new Intent(mContext, WebsocketService.class);
-        startService(serviceIntent);
+        try {
+            LogUtils.printLog(tag, " startMonitorSevice ");
+            Intent serviceIntent = new Intent(mContext, WebsocketService.class);
+            startService(serviceIntent);
+        } catch(Exception e) {
+            e.printStackTrace();
+            LogUtils.printLog(tag, " startMonitorSevice exception ----> " + e.getMessage());
+        }
     }
 
     private void restartApp() {
