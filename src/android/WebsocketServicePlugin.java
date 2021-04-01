@@ -85,25 +85,6 @@ public class WebsocketServicePlugin extends CordovaPlugin {
      // Flag indicates if the service is bind
      private boolean isBind = false;
 
-    /*public static WebSocketServicePlugin getInstance() {
-        return this;
-    }
-
-    public WebSocketServicePlugin() {
-        instance = this;
-        isEnableHearbitCheck = false;
-        if (m_handler == null) {
-            m_handler = new Handler(Looper.getMainLooper());
-            m_handlerTask = new Runnable() {
-                @Override
-                public void run() {
-
-                    //checkAndSendHeartBit();
-                }
-            };
-            m_handlerTask.run();
-        }
-    }*/
 
     public void kill() {
         m_handler.removeCallbacks(m_handlerTask);
@@ -309,11 +290,9 @@ public class WebsocketServicePlugin extends CordovaPlugin {
     }
 
     public void connect(String uri, CallbackContext callbackContext) {
-        startService(uri);
+
         FileUtils.writeToFile("websocketserviceuri", uri, this.getApplicationContext());
-        //Intent i  = new Intent(this.getApplicationContext(), WebsocketService.class);
-        //i.putExtra("websocketserviceuri",uri);
-        //this.getCurrentActivity().startService(i);
+        startService(uri);
 
         // BISOGNA GESTIRE IL CASO IN CUI LA CONNESSIONE E' ATTIVA E VOGLIO CAMBIARE SERVER
         WebsocketService.plugin = this;
@@ -325,8 +304,8 @@ public class WebsocketServicePlugin extends CordovaPlugin {
     }
 
     public void disconnect() {
-        startService(uri);
         FileUtils.writeToFile("websocketserviceuri", "", this.getApplicationContext());
+        startService("");
         WebsocketService.plugin = this;
         stopService();
         //WebsocketService.instance().connect(uri);
@@ -340,8 +319,10 @@ public class WebsocketServicePlugin extends CordovaPlugin {
     {
         Activity context = cordova.getActivity();
 
-        if (isBind)
+        if (isBind) {
+            WebsocketService.instance().publicStartCommand(uri);
             return;
+        }
 
         Intent intent = new Intent(context, WebsocketService.class);
         if(uri != null)

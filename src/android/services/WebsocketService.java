@@ -44,6 +44,7 @@ public class WebsocketService extends Service  {
 
     public static WebsocketServicePlugin plugin;
     public static String uri;
+    public static String origUri;
     private boolean isConnected = false;
     protected static boolean requestHeartBit = false;
     protected static int failedHeartBit = 0;
@@ -165,7 +166,7 @@ public class WebsocketService extends Service  {
         } else {
             LogUtils.printLog(tag," intent is null");
         }
-        _onStartCommand(uri);
+        _onStartCommand(uri, true);
 
         // PREFERISCO UTILIZZARE LO START_STICKY PERCHE' NEL CASO DI CAMBIO SERVER ATTRVERSO IL CONNECT DI WebSocketNativeModulo riscrivo l'uri e reinizializzo tutto
         return START_STICKY;
@@ -175,12 +176,26 @@ public class WebsocketService extends Service  {
 
     private static Thread tProcess = null;
 
-    private void _onStartCommand(String uri){
-        LogUtils.printLog(tag," onStartCommand ");
-        if(uri == null && this.uri == null) {
+    public void publicStartCommand(String uri) {
+        this._onStartCommand(uri, false);
+    }
+
+    private void _onStartCommand(String uri, boolean canReadFromFile){
+        LogUtils.printLog(tag," onStartCommand " + uri);
+        this.origUri = this.uri;
+        LogUtils.printLog(tag," onStartCommand origUri:" + uri);
+        /*if(uri == null && this.uri == null) {
             uri = FileUtils.readFromFile("websocketserviceuri", this);
             this.uri = uri;
+        } else if(uri != null) {
+            this.uri = uri;
+        }*/
+        this.uri = uri;
+        if(canReadFromFile) {
+            LogUtils.printLog(tag," this is null??? " + (this == null ? "true" : "false"));
+            this.uri = FileUtils.readFromFile("websocketserviceuri", this);
         }
+
         if (tProcess == null) {
             tProcess = new Thread(new Runnable() {
                 public void run() {
@@ -188,7 +203,7 @@ public class WebsocketService extends Service  {
 
                     while (true) {
                         try {
-                            if (WebsocketService._sock == null && WebsocketService.reconnect) {
+                            if ((!checkUriEquals() || WebsocketService._sock == null) && WebsocketService.reconnect) {
 
                                 _connect();
                                 LogUtils.printLog(tag," SOCKET IN ATTIVAZIONE");
@@ -197,9 +212,9 @@ public class WebsocketService extends Service  {
                                 if(WebsocketService._sock == null) {
                                     LogUtils.printLog(tag, " SOCKET NON ATTIVATA");
                                     updateNotification(false);
+                                } else {
+                                    LogUtils.printLog(tag, " SOCKET ATTIVATA");
                                 }
-                                else
-                                    LogUtils.printLog(tag," SOCKET ATTIVATA");
                                 Thread.sleep(5000);
                             }
 
@@ -215,8 +230,18 @@ public class WebsocketService extends Service  {
             updateNotification(false);
 
         }
-        else
-            LogUtils.printLog(tag," start command fired");
+        else {
+            LogUtils.printLog(tag, " start command fired");
+            WebsocketService.reconnect = true;
+        }
+    }
+
+    public boolean checkUriEquals() {
+        if(this.uri == null && this.origUri == null)
+            return true;
+        if(this.uri == null)
+            return false;
+        return this.uri.equals(this.origUri);
     }
 
     public void connect(String uri) {
@@ -240,9 +265,10 @@ public class WebsocketService extends Service  {
 
     public void _connect(){
         reconnect = false;
-
+        this.origUri = this.uri;
         if (this.uri == null) {
             LogUtils.printLog(tag," URI IS NULL");
+            this.closeConnectionIfNeeded();
             reconnect = true;
             return;
         } else {
@@ -306,6 +332,8 @@ public class WebsocketService extends Service  {
                             uri = null;
                             closeSocket();
                             stopHeartbitService();
+                            sendToListner("onWebsocketForceLogout", "");
+                            sendEvent("onWebsocketForceLogout", "");
                         }
                     }
                 } catch (JSONException ex) {
@@ -341,6 +369,14 @@ public class WebsocketService extends Service  {
                 LogUtils.printLog(tag,"WEBSOCKET ON EXCEPTION " + e.getMessage());
                 e.printStackTrace();
                 sendToListner("onWebsocketException", "");
+                // SE reconnect è false, è perchè sto effettuando l'apertura della socket;
+                // pertanto se ho un'eccezione è, ad esempio, perchè sto riavviando il server;
+                // quindi in questo caso devo rimettere reconnect a true in modo da effettuare un nuovo tentativo
+                if( reconnect == false) {
+                    reconnect = true;
+                    isConnected = false;
+                    _sock=null;
+                }
                 //e.printStackTrace();
                 //isConnected = false;
                 if(plugin!=null) {
