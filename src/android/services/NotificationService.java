@@ -113,65 +113,8 @@ public class NotificationService  {
 
     public void updateNotification(Boolean status, Context c, Class<?> caClass) {
 
-        /*if(clickActivity == null) {
-            getMainActivity(c);
-        }
 
-        if(clickActivity == null)
-            return;
-
-        Intent t = new Intent(c, clickActivity);
-        PendingIntent pi = PendingIntent.getActivity(c, 0, t, PendingIntent.FLAG_UPDATE_CURRENT);
-        */
-        /*NotificationCompat.Builder builder = null;
-
-
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel notificationChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, "My Notifications", android.app.NotificationManager.IMPORTANCE_DEFAULT);
-            NotificationManager notificationManager = (NotificationManager) c.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-
-            // Configure the notification channel.
-            notificationChannel.setDescription("Channel description");
-            notificationChannel.enableLights(true);
-            notificationChannel.setLightColor(Color.RED);
-            notificationChannel.setVibrationPattern(new long[]{0, 1000, 500, 1000});
-            notificationChannel.enableVibration(true);
-            notificationManager.createNotificationChannel(notificationChannel);
-            builder = new NotificationCompat.Builder(c, NOTIFICATION_CHANNEL_ID);
-        } else {
-            builder = new NotificationCompat.Builder(c,NOTIFICATION_CHANNEL_ID);
-        }
-
-
-        //builder = new NotificationCompat.Builder(c);
-        String statusText = "Online";
-        //builder.setLargeIcon(BitmapFactory.decodeResource(c.getResources(), R.mipmap.ic_idra));
-        if(status){
-            statusText = "Online";
-            //builder.setSmallIcon(R.mipmap.ic_online);
-            LogUtils.printLog(TAG,"Notification online ");
-
-
-            //builder.setLargeIcon(R.mipmap.ic_idra);
-        } else {
-            statusText = "Offline";
-            //builder.setSmallIcon(R.mipmap.ic_offline);
-        }
-        builder.setTicker("IDRA");
-        builder.setContentTitle("IDRA - "  + this.userCompleteName);
-        builder.setContentText(statusText + " - " + this.userEmail);
-        String terza = ""; //status + " ";
-        if(this.numNotification>0) {
-            terza += "- " + "notifications: " + this.numNotification;
-        }
-        builder.setSubText(terza);
-        builder.setContentIntent(pi);
-        builder.setOngoing(true);
-        builder.setOnlyAlertOnce(true);
-
-        Notification notification = builder.build();*/
-        Notification notification = makeNotification(status, c, caClass);
+        Notification notification = makeNotification(status, null, c, caClass);
         NotificationManager manager = getNotificationManager(c);
         manager.notify(9999, notification);
 
@@ -181,18 +124,22 @@ public class NotificationService  {
         }*/
     }
 
-    public void updateNotification(Boolean status, Integer notificationNumber, Context c, Class<?> caClass) {
-
-        Notification notification = makeNotification(status, notificationNumber, c, caClass);
+    public void updateNotification(Boolean status, Integer notNum, Context c, Class<?> caClass) {
+        LogUtils.printLog(TAG,"updateNotification " + (notNum != null ? notNum : "null"));
+        LogUtils.printLog(TAG,"updateNotification context" + (c != null ? c : "null"));
+        LogUtils.printLog(TAG,"updateNotification caClass" + (caClass != null ? caClass : "null"));
+        Notification notification = makeNotification(status, notNum, c, caClass);
         NotificationManager manager = getNotificationManager(c);
         manager.notify(9999, notification);
 
     }
-    private Notification makeNotification(Boolean status, Context c, Class<?> caClass) {
+    /*private Notification makeNotification(Boolean status, Context c, Class<?> caClass) {
         return makeNotification(status, null, c, caClass);
-    }
+    }*/
 
-    private Notification makeNotification(Boolean status, Integer notificationNumber, Context c, Class<?> caClass) {
+    private Notification makeNotification(Boolean status, Integer notNum, Context c, Class<?> caClass) {
+        LogUtils.printLog(TAG,"makeNotification " + (notNum != null ? notNum : "null"));
+
         if(status == null) {
             status = this.status;
         } else {
@@ -202,31 +149,27 @@ public class NotificationService  {
             status = false;
         }
         NotificationCompat.Builder builder = null;
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel notificationChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, "My Notifications", android.app.NotificationManager.IMPORTANCE_DEFAULT);
-
-            //NotificationManager notificationManager = (NotificationManager) c.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-            NotificationManager notificationManager = getNotificationManager(c);
-
-            // Configure the notification channel.
-            notificationChannel.setDescription("Channel description");
-            notificationChannel.enableLights(true);
-            notificationChannel.setLightColor(Color.RED);
-            // notificationChannel.setVibrationPattern(new long[]{0, 1000, 500, 1000});
-            // notificationChannel.enableVibration(true);
-            notificationManager.createNotificationChannel(notificationChannel);
-            //builder = new NotificationCompat.Builder(c, NOTIFICATION_CHANNEL_ID);
-        } else {
-            //builder = new NotificationCompat.Builder(c, NOTIFICATION_CHANNEL_ID);
+        LogUtils.printLog(TAG,"makeNotification1 " + (notNum != null ? notNum : "null"));
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationChannel notificationChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, "My Notifications", android.app.NotificationManager.IMPORTANCE_DEFAULT);
+                NotificationManager notificationManager = getNotificationManager(c);
+                notificationChannel.setDescription("Channel description");
+                notificationChannel.enableLights(true);
+                notificationChannel.setLightColor(Color.RED);
+                notificationManager.createNotificationChannel(notificationChannel);
+            } else {
+            }
+        } catch(Exception e) {
+            LogUtils.printLog(TAG,"makeNotification-- " + e.getMessage());
         }
         builder = new NotificationCompat.Builder(c, NOTIFICATION_CHANNEL_ID);
-
+        LogUtils.printLog(TAG,"makeNotification2 " + (notNum != null ? notNum : "null"));
         //builder = new NotificationCompat.Builder(c);
-        String statusText = "Online";
+        String statusText = "-";
         //builder.setLargeIcon(BitmapFactory.decodeResource(c.getResources(), R.mipmap.ic_idra));
         int iconR = getSmallIcon(status, c);
-        LogUtils.printLog(TAG,"Small icon " + iconR);
+        //LogUtils.printLog(TAG,"Small icon " + iconR);
         builder.setSmallIcon(iconR);
         if(status){
             statusText = "Online";
@@ -237,16 +180,17 @@ public class NotificationService  {
             statusText = "Offline";
             //builder.setSmallIcon(R.mipmap.ic_offline);
         }
+        LogUtils.printLog(TAG,"makeNotification3 " + (notNum != null ? notNum : "null"));
         builder.setTicker("WebSocketService");
 
         String terza = ""; //status + " ";
-        if(this.numNotification>0) {
+        LogUtils.printLog(TAG,"notNum " + (notNum != null ? notNum : "null"));
+        if(notNum != null && notNum > 0) {
+            statusText += " - " + "notifiche: " + notNum;
+            terza += "notifiche: " + notNum;
+            this.numNotification = notNum;
+        } else if(this.numNotification > 0) {
             terza += "notifications: " + this.numNotification;
-        }
-
-        if(notificationNumber != null && notificationNumber > 0) {
-            statusText += " - " + "notifiche: " + notificationNumber;
-            terza += "notifiche: " + notificationNumber;
         }
 
         builder.setContentTitle(defaultSettings.optString("title", "WebSocketService" ));
