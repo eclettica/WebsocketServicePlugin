@@ -97,8 +97,10 @@ public class NotificationService  {
 
     public void configure(JSONObject settings)
     {
+        LogUtils.printLog(TAG,"configure: " + (settings != null ? settings : "null"));
+
         this.defaultSettings = settings;
-        NotificationService.instance().configure(this.defaultSettings);
+        //NotificationService.instance().configure(this.defaultSettings);
     }
 
     /**
@@ -126,8 +128,8 @@ public class NotificationService  {
 
     public void updateNotification(Boolean status, Integer notNum, Context c, Class<?> caClass) {
         LogUtils.printLog(TAG,"updateNotification " + (notNum != null ? notNum : "null"));
-        LogUtils.printLog(TAG,"updateNotification context" + (c != null ? c : "null"));
-        LogUtils.printLog(TAG,"updateNotification caClass" + (caClass != null ? caClass : "null"));
+        LogUtils.printLog(TAG,"updateNotification context " + (c != null ? c : "null"));
+        LogUtils.printLog(TAG,"updateNotification caClass " + (caClass != null ? caClass : "null"));
         Notification notification = makeNotification(status, notNum, c, caClass);
         NotificationManager manager = getNotificationManager(c);
         manager.notify(9999, notification);
@@ -181,19 +183,24 @@ public class NotificationService  {
             //builder.setSmallIcon(R.mipmap.ic_offline);
         }
         LogUtils.printLog(TAG,"makeNotification3 " + (notNum != null ? notNum : "null"));
-        builder.setTicker("WebSocketService");
+
+        builder.setTicker(defaultSettings.optString("title", "WebSocketService ticker" ));
 
         String terza = ""; //status + " ";
         LogUtils.printLog(TAG,"notNum " + (notNum != null ? notNum : "null"));
+        if(notNum != null)
+            this.numNotification = notNum;
+            
         if(notNum != null && notNum > 0) {
             statusText += " - " + "notifiche: " + notNum;
             terza += "notifiche: " + notNum;
-            this.numNotification = notNum;
         } else if(this.numNotification > 0) {
             terza += "notifications: " + this.numNotification;
+            statusText += " - " + "notifiche: " + this.numNotification;
         }
 
-        builder.setContentTitle(defaultSettings.optString("title", "WebSocketService" ));
+        LogUtils.printLog(TAG,"set title: " + (defaultSettings != null ? defaultSettings : "null"));
+        builder.setContentTitle(defaultSettings.optString("title", "WebSocketService title" ));
         //builder.setContentText(statusText + " - " + defaultSettings.optString("text", "" ));
         builder.setContentText(statusText);
         //builder.setContentTitle("WebSocketService - "  + this.userCompleteName);
@@ -272,6 +279,8 @@ public class NotificationService  {
     }
 
     private NotificationManager getNotificationManager(Context c) {
+        LogUtils.printLog(TAG,"getNotificationManager context " + (c != null ? c.getClass() : "null"));
+        LogUtils.printLog(TAG,"getNotificationManager NOTIFICATION_SERVICE " + (c.NOTIFICATION_SERVICE != null ? c.NOTIFICATION_SERVICE : "null"));
         return (NotificationManager) c.getSystemService(c.NOTIFICATION_SERVICE);
     }
 
@@ -289,74 +298,6 @@ public class NotificationService  {
             e.printStackTrace();
         }
     }
-
-
-    /*public void updateNativeNotification(Boolean status, Context c) {
-
-        if(clickActivity == null) {
-            getMainActivity(c);
-        }
-
-        if (clickActivity == null)
-            return;
-
-        Intent t = new Intent(c, clickActivity);
-        PendingIntent pi = PendingIntent.getActivity(c, 0, t, PendingIntent.FLAG_UPDATE_CURRENT);
-        NotificationCompat.Builder builder = null;
-
-
-        NotificationManager notificationManager = (NotificationManager) c.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel notificationChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, "My Notifications", android.app.NotificationManager.IMPORTANCE_DEFAULT);
-
-            // Configure the notification channel.
-            notificationChannel.setDescription("Channel description");
-            notificationChannel.enableLights(true);
-            notificationChannel.setLightColor(Color.RED);
-            notificationChannel.setVibrationPattern(new long[]{0, 1000, 500, 1000});
-            notificationChannel.enableVibration(true);
-            notificationManager.createNotificationChannel(notificationChannel);
-            builder = new NotificationCompat.Builder(c, NOTIFICATION_CHANNEL_ID);
-        } else {
-            builder = new NotificationCompat.Builder(c,NOTIFICATION_CHANNEL_ID);
-        }
-
-
-        //builder = new NotificationCompat.Builder(c);
-        String statusText = "Online";
-        //builder.setLargeIcon(BitmapFactory.decodeResource(c.getResources(), R.mipmap.ic_idra));
-        if(status){
-            statusText = "Online";
-            //builder.setSmallIcon(R.mipmap.ic_online);
-            LogUtils.printLog(TAG,"Notification online ");
-
-
-            //builder.setLargeIcon(R.mipmap.ic_idra);
-        } else {
-            statusText = "Offline";
-            //builder.setSmallIcon(R.mipmap.ic_offline);
-        }
-        builder.setTicker("IDRA");
-        builder.setContentTitle("IDRA - "  + this.userCompleteName);
-        builder.setContentText(statusText + " - " + this.userEmail);
-        String terza = ""; //status + " ";
-        if(this.numNotification>0) {
-            terza += "- " + "notifications: " + this.numNotification;
-        }
-        builder.setSubText(terza);
-        builder.setContentIntent(pi);
-        builder.setOngoing(true);
-        builder.setOnlyAlertOnce(true);
-
-        Notification notification = builder.build();
-        NotificationManager manager = null;
-
-
-        notificationManager.notify(9999, notification);
-
-    }*/
-
 
 
 

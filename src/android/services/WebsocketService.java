@@ -303,7 +303,7 @@ public class WebsocketService extends Service  {
             public void onTextReceived(String message) {
 
                 sendToListner("onWebsocketMessage", message);
-                sendEvent("onWebsocketMessage", message);
+                //sendEvent("onWebsocketMessage", message);
 
                 JSONObject jobj = null;
 

@@ -152,6 +152,7 @@ public class WebsocketServicePlugin extends CordovaPlugin {
                 options = args.getJSONObject(0);
             switch (action) {
                 case "configure":
+                    LogUtils.printLog(tag, "NotificationService configure " + options);
                     this.configure(options);
                     break;
                 case "enable":
@@ -225,6 +226,7 @@ public class WebsocketServicePlugin extends CordovaPlugin {
      */
     private void configure(JSONObject settings)
     {
+            LogUtils.printLog(tag, "NotificationService configure " + settings);
             this.defaultSettings = settings;
             NotificationService.instance().configure(this.defaultSettings);
     }
